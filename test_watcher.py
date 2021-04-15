@@ -28,22 +28,39 @@ class Watcher:
 
 class Handler(FileSystemEventHandler):
     
-    @staticmethod
-    def on_any_event(event):
+    def Handler(self):
+        self.should_create_dir = False
+    
+    def on_any_event(self, event):
         s = event.src_path.split('\\')
         r = TARGETDIR + ('\\'.join(s[3:]))
-        
+
         if event.event_type == 'created':
             if event.is_directory:
-                os.system("md " + r)
+                self.should_create_dir = True
+                # os.system("md " + r)
             else:
-                ss = "mklink " + r + " " + event.src_path
-                os.system(ss)
+                if event.src_path.endswith(".cpp") or event.src_path.endswith(".h"):
+                    if self.should_create_dir:
+                        rr = TARGETDIR + ('\\'.join(s[3:-1]))
+                        os.system("md " + rr)
+                        self.should_create_dir = False
+                        
+                    ss = "mklink " + r + " " + event.src_path
+                    print(ss)
+                    os.system(ss)
+                else:
+                    self.should_create_dir = False
+                    
+
         elif event.event_type == 'deleted':
             if event.is_directory:
+                print(r)
                 os.system("rmdir " + r)
             else:
-                os.system("del " + r)
+                if event.src_path.endswith(".cpp") or event.src_path.endswith(".h"):
+                    rr = TARGETDIR + ('\\'.join(s[3:-1]))
+                    os.system("del " + r)
 
 if __name__ == '__main__':
     w = Watcher()
